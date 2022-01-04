@@ -1,12 +1,14 @@
+// step 1 convert ETH to DAI
+// step 2 put DAI to treasury and get OHM
+// step 3 put OHM to stake rewards
+
+pragma solidity ^0.6.0;
+
 import "./interfaces/IUniswapV2Router02.sol";
 import "./interfaces/ITreasury.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract RewardsIncrement {
-  // step 1 convert ETH to DAI
-  // step 2 put DAI to treasury and get OHM
-  // step 3 put OHM to stake rewards
-
   IUniswapV2Router02 public router;
   ITreasury public treasury;
   address public weth;
@@ -33,7 +35,7 @@ contract RewardsIncrement {
   function convertToDaiMintOhmIncreaseRewards() external payable {
     require(msg.value > 0, "Zerro ETH");
 
-    address[] path = new address[](2);
+    address[] memory path = new address[](2);
     path[0] = weth;
     path[1] = dai;
 
