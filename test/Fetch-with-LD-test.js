@@ -20,18 +20,21 @@ const UniswapV2Router = artifacts.require('./UniswapV2Router02.sol')
 const UniswapV2Pair = artifacts.require('./UniswapV2Pair.sol')
 const WETH = artifacts.require('./WETH9.sol')
 const TOKEN = artifacts.require('./OlympusERC20Token.sol')
+const STOKEN = artifacts.require('./sOlympus.sol')
 const Fetch = artifacts.require('./Fetch.sol')
 const Sale = artifacts.require('./Sale.sol')
 const SplitFormula = artifacts.require('./SplitFormula')
 const RewardsIncrement = artifacts.require('./RewardsIncrement')
 const DAI = artifacts.require('./DAI')
 const Treasury = artifacts.require('./OlympusTreasury')
+const Stake = artifacts.require('./OlympusStaking')
 
 const MINLDAmountInDAI = toWei("450")
 const MAXLDAmountInDAI = toWei("1000")
 const DAIRate = toWei(String(1000))
 
 const BlocksNeededForQueue = 10
+const initialIndex = '7675210820'
 
 
 let pancakeFactory,
@@ -48,7 +51,8 @@ let pancakeFactory,
     dai,
     treasury,
     stake,
-    tokenDaiPair
+    tokenDaiPair,
+    sToken
 
 
 contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
@@ -57,6 +61,7 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
     // deploy contracts
     weth = await WETH.new()
     dai = await DAI.new(DAIRate * 2)
+    sToken = await STOKEN.new()
 
     pancakeFactory = await UniswapV2Factory.new(userOne)
     pancakeRouter = await UniswapV2Router.new(pancakeFactory.address, weth.address)
@@ -141,6 +146,14 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
       BlocksNeededForQueue
     )
 
+    stake = await Stake.new(
+      token.address,
+      sToken.address,
+      '2200',
+      '338',
+      '8961000'
+    )
+
     rewardsIncrement = await RewardsIncrement.new(
       pancakeRouter.address,
       weth.address,
@@ -170,6 +183,13 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
 
     // sell
     await token.transfer(sale.address, saleAmount)
+
+    // set stake for stoken
+    await sToken.initialize(staking.address)
+    await sToken.setIndex(initialIndex)
+
+    // Set treasury for OHM token
+    await token.setVault(treasury.address);
 
     // update white list for fetch
     await sale.updateWhiteList(fetch.address, true)
