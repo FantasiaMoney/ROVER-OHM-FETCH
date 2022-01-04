@@ -1,7 +1,3 @@
-// step 1 convert ETH to DAI
-// step 2 put DAI to treasury and get OHM
-// step 3 put OHM to stake rewards
-
 pragma solidity ^0.6.0;
 
 import "./interfaces/IUniswapV2Router02.sol";
@@ -32,7 +28,10 @@ contract RewardsIncrement {
     stake = _stake;
   }
 
-  function convertToDaiMintOhmIncreaseRewards() external payable {
+  // step 1 convert ETH to DAI
+  // step 2 put DAI to treasury and get OHM
+  // step 3 put OHM to stake rewards
+  function increaseRewards() external payable {
     require(msg.value > 0, "Zerro ETH");
 
     address[] memory path = new address[](2);
