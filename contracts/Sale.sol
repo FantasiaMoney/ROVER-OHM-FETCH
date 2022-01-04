@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./interfaces/IUniswapV2Router02.sol";
-import "./interfaces/ILDManager.sol";
 import "./interfaces/IOwnable.sol";
 
 
@@ -15,12 +14,10 @@ contract Sale is Ownable {
   IERC20  public token;
   bool public paused = false;
   IUniswapV2Router02 public Router;
-  ILDManager public LDManager;
   bool public sellEnd = false;
-  bool public enabledLDSplit = true;
   bool public endMigrate = false;
-
   mapping(address => bool) public whiteList;
+
 
   event Buy(address indexed user, uint256 amount);
 
@@ -34,15 +31,13 @@ contract Sale is Ownable {
   constructor(
     address _token,
     address payable _beneficiary,
-    address _router,
-    address _LDManager
+    address _router
     )
     public
   {
     token = IERC20(_token);
     beneficiary = _beneficiary;
     Router = IUniswapV2Router02(_router);
-    LDManager = ILDManager(_LDManager);
   }
 
   /**
@@ -62,14 +57,8 @@ contract Sale is Ownable {
     uint256 sendAmount = getSalePrice(msg.value);
     // check if enough balance
     require(token.balanceOf(address(this)) >= sendAmount, "Not enough balance");
-    // split ETH with LD manager
-    if(enabledLDSplit){
-      uint256 halfETH = msg.value.div(2);
-      beneficiary.transfer(halfETH);
-      LDManager.addLiquidity{value: halfETH}();
-    }else{
-      beneficiary.transfer(msg.value);
-    }
+    // transfer ETH from user to receiver
+    beneficiary.transfer(msg.value);
     // transfer token to user
     token.transfer(msg.sender, sendAmount);
     // event
@@ -101,6 +90,7 @@ contract Sale is Ownable {
     paused = false;
   }
 
+
   /**
   * @dev owner can update beneficiary
   */
@@ -113,14 +103,6 @@ contract Sale is Ownable {
   */
   function updateWhiteList(address _address, bool _status) external onlyOwner {
     whiteList[_address] = _status;
-  }
-
-
-  /**
-  * @dev owner can update enabled LD split
-  */
-  function updateEnabledLDSplit(bool _status) external onlyOwner {
-    enabledLDSplit = _status;
   }
 
   /**
