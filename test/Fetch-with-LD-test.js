@@ -60,7 +60,11 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
   async function deployContracts(){
     // deploy contracts
     weth = await WETH.new()
-    dai = await DAI.new(DAIRate * 2)
+    dai = await DAI.new(DAIRate * 3)
+
+    await dai.mint(userOne, DAIRate * 3)
+
+
     sToken = await STOKEN.new()
 
     pancakeFactory = await UniswapV2Factory.new(userOne)
@@ -193,6 +197,11 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
 
     // update white list for fetch
     await sale.updateWhiteList(fetch.address, true)
+
+    // TODO
+    // // set distributor contract and warmup contract
+    // await staking.setContract('0', distributor.address);
+    // await staking.setContract('1', stakingWarmup.address);
   }
 
   beforeEach(async function() {
