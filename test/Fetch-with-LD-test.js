@@ -25,10 +25,13 @@ const Sale = artifacts.require('./Sale.sol')
 const SplitFormula = artifacts.require('./SplitFormula')
 const RewardsIncrement = artifacts.require('./RewardsIncrement')
 const DAI = artifacts.require('./DAI')
+const Treasury = artifacts.require('./OlympusTreasury')
 
 const MINLDAmountInDAI = toWei("450")
 const MAXLDAmountInDAI = toWei("1000")
 const DAIRate = toWei(String(1000))
+
+const BlocksNeededForQueue = 10
 
 
 let pancakeFactory,
@@ -44,7 +47,8 @@ let pancakeFactory,
     rewardsIncrement,
     dai,
     treasury,
-    stake
+    stake,
+    tokenDaiPair
 
 
 contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
@@ -103,6 +107,8 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
         "1111111111111111111111"
     )
 
+    tokenDaiPair = await pancakeFactory.allPairs(2)
+
     const initialRate = await pancakeRouter.getAmountsOut(
       1000000000,
       [token.address, weth.address]
@@ -126,6 +132,13 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
       pair.address,
       token.address,
       dai.address
+    )
+
+    treasury = await Treasury.new(
+      token.address,
+      dai.address,
+      tokenDaiPair,
+      BlocksNeededForQueue
     )
 
     rewardsIncrement = await RewardsIncrement.new(
