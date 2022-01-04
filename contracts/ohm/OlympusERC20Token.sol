@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-pragma solidity 0.7.5;
+pragma solidity 0.6.12;
 
 library EnumerableSet {
 
@@ -622,7 +622,7 @@ abstract contract ERC20 is IERC20 {
   // Present in ERC777
   uint8 internal _decimals;
 
-  constructor (string memory name_, string memory symbol_, uint8 decimals_) {
+  constructor (string memory name_, string memory symbol_, uint8 decimals_) public {
     _name = name_;
     _symbol = symbol_;
     _decimals = decimals_;
@@ -763,7 +763,7 @@ abstract contract ERC20Permit is ERC20, IERC2612Permit {
 
     bytes32 public DOMAIN_SEPARATOR;
 
-    constructor() {
+    constructor() public {
         uint256 chainID;
         assembly {
             chainID := chainid()
@@ -822,7 +822,7 @@ contract Ownable is IOwnable {
 
   event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-  constructor () {
+  constructor () public {
     _owner = msg.sender;
     emit OwnershipTransferred( address(0), _owner );
   }
@@ -873,7 +873,7 @@ contract OlympusERC20Token is ERC20Permit, VaultOwned {
 
     using SafeMath for uint256;
 
-    constructor() ERC20("Olympus", "OHM", 9) {
+    constructor() ERC20("Olympus", "OHM", 9) public {
     }
 
     function mint(address account_, uint256 amount_) external onlyVault() {

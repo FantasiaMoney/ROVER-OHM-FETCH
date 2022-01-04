@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-pragma solidity 0.7.5;
+pragma solidity 0.6.12;
 
 library SafeMath {
     /**
@@ -483,7 +483,7 @@ contract Ownable is IOwnable {
     event OwnershipPushed(address indexed previousOwner, address indexed newOwner);
     event OwnershipPulled(address indexed previousOwner, address indexed newOwner);
 
-    constructor () {
+    constructor () public {
         _owner = msg.sender;
         emit OwnershipPushed( address(0), _owner );
     }
@@ -567,7 +567,7 @@ contract OlympusStaking is Ownable {
         uint _epochLength,
         uint _firstEpochNumber,
         uint _firstEpochBlock
-    ) {
+    ) public {
         require( _OHM != address(0) );
         OHM = _OHM;
         require( _sOHM != address(0) );

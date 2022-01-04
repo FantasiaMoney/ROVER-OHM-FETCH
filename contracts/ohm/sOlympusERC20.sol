@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-pragma solidity 0.7.5;
+pragma solidity 0.6.12;
 
 
 /**
@@ -543,7 +543,7 @@ abstract contract ERC20
    * All three of these values are immutable: they can only be set once during
    * construction.
    */
-  constructor (string memory name_, string memory symbol_, uint8 decimals_) {
+  constructor (string memory name_, string memory symbol_, uint8 decimals_) public {
     _name = name_;
     _symbol = symbol_;
     _decimals = decimals_;
@@ -886,7 +886,7 @@ abstract contract ERC20Permit is ERC20, IERC2612Permit {
 
     bytes32 public DOMAIN_SEPARATOR;
 
-    constructor() {
+    constructor() public {
 
         uint256 chainID;
         assembly {
@@ -955,7 +955,7 @@ contract Ownable is IOwnable {
     event OwnershipPushed(address indexed previousOwner, address indexed newOwner);
     event OwnershipPulled(address indexed previousOwner, address indexed newOwner);
 
-    constructor () {
+    constructor () public {
         _owner = msg.sender;
         emit OwnershipPushed( address(0), _owner );
     }
@@ -1031,7 +1031,7 @@ contract sOlympus is ERC20Permit, Ownable {
 
     mapping ( address => mapping ( address => uint256 ) ) private _allowedValue;
 
-    constructor() ERC20("Staked Olympus", "sOHM", 9) ERC20Permit() {
+    constructor() ERC20("Staked Olympus", "sOHM", 9) ERC20Permit() public {
         initializer = msg.sender;
         _totalSupply = INITIAL_FRAGMENTS_SUPPLY;
         _gonsPerFragment = TOTAL_GONS.div(_totalSupply);
