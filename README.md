@@ -11,22 +11,27 @@ Make sure You updated PairHash in config.js and test/contracts/dex/libraries/Uni
 
 # Description
 ```
-Fetch/Sale/LD manager
+Step 1
 
-1) Fetch split ETH input with SALE and DEX (% of split can be changed in splitFormula).
+User send BNB, we put some to DEX some to Sale.
 
-2) White list for sale (users can not use sale)
+Step 2
 
-3) Sale split ETH with LDManager
+BNB from sale we convert to DAI (again via DEX) and put to Tresuary
 
-4) LDManager add additional LD in each tx
+Step 3
 
-5) Add finish (burn remains tokens) in sale and LD manager
+Tresuary mint new OHM and we put this into stake rewards
 
-6) Add migrate() to sale and LDmanager and vice versa, or to new versions of sale or LD manager
+Step 4
 
-7) Add convertFor for case deposit without stake
+Stake increase sOHM (rebase) for users because we increased total supply of OHM
 
+
+
+Tresuary
+
+function deposit( uint _amount, address _token, uint _profit ) external returns ( uint send_ )
 
 
 Safemoon token
