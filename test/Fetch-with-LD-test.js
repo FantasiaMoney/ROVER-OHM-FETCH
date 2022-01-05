@@ -28,6 +28,8 @@ const RewardsIncrement = artifacts.require('./RewardsIncrement')
 const DAI = artifacts.require('./DAI')
 const Treasury = artifacts.require('./OlympusTreasury')
 const Stake = artifacts.require('./OlympusStaking')
+const Distributor = artifacts.require('./Distributor')
+const StakingWarmup = artifacts.require('./StakingWarmup')
 
 const MINLDAmountInDAI = toWei("450")
 const MAXLDAmountInDAI = toWei("1000")
@@ -53,7 +55,9 @@ let pancakeFactory,
     treasury,
     stake,
     tokenDaiPair,
-    sToken
+    sToken,
+    distributor,
+    stakingWarmup
 
 
 contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
@@ -185,6 +189,18 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
       splitFormula.address
     )
 
+    distributor = await Distributor.new(
+      treasury.address,
+      token.address,
+      '2200',
+      '8961000'
+    )
+
+    stakingWarmup = await StakingWarmup.new(
+      stake.address,
+      sToken.address
+    )
+
     // send all remains to sale and ld maanger
     const saleAmount = await token.balanceOf(userOne)
 
@@ -194,10 +210,11 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
     // update white list for fetch
     await sale.updateWhiteList(fetch.address, true)
 
-    // TODO
-    // // set distributor contract and warmup contract
-    // await staking.setContract('0', distributor.address);
-    // await staking.setContract('1', stakingWarmup.address);
+    await distributor.addRecipient(stake.address, '3000');
+
+    // set distributor contract and warmup contract
+    await stake.setContract('0', distributor.address);
+    await stake.setContract('1', stakingWarmup.address);
   }
 
   beforeEach(async function() {
@@ -205,29 +222,29 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
   })
 
 
-describe('INIT', function() {
-
-    it('PairHash correct', async function() {
-      assert.equal(
-        String(await pancakeFactory.pairCodeHash()).toLowerCase(),
-        String(PairHash).toLowerCase(),
-      )
-    })
-
-    it('Factory in Router correct', async function() {
-      assert.equal(
-        String(await pancakeRouter.factory()).toLowerCase(),
-        String(pancakeFactory.address).toLowerCase(),
-      )
-    })
-
-    it('WETH in Router correct', async function() {
-      assert.equal(
-        String(await pancakeRouter.WETH()).toLowerCase(),
-        String(weth.address).toLowerCase(),
-      )
-    })
-})
+// describe('INIT', function() {
+//
+//     it('PairHash correct', async function() {
+//       assert.equal(
+//         String(await pancakeFactory.pairCodeHash()).toLowerCase(),
+//         String(PairHash).toLowerCase(),
+//       )
+//     })
+//
+//     it('Factory in Router correct', async function() {
+//       assert.equal(
+//         String(await pancakeRouter.factory()).toLowerCase(),
+//         String(pancakeFactory.address).toLowerCase(),
+//       )
+//     })
+//
+//     it('WETH in Router correct', async function() {
+//       assert.equal(
+//         String(await pancakeRouter.WETH()).toLowerCase(),
+//         String(weth.address).toLowerCase(),
+//       )
+//     })
+// })
 
 // describe('Split formula', function() {
 //     it('Not owner can not update split formula', async function() {
@@ -254,6 +271,18 @@ describe('CONVERT', function() {
     // convert
     await fetch.convert({ from:userTwo, value:toWei(String(10)) })
     assert.notEqual(await token.balanceOf(userTwo), 0)
+  })
+
+
+  it('rebase increase after inrease OHM supply', async function() {
+    // convert
+    await stake.rebase()
+    console.log(Number(await token.totalSupply()))
+    console.log(Number(await sToken.totalSupply()))
+    await fetch.convert({ from:userTwo, value:toWei(String(10)) })
+    await stake.rebase()
+    console.log(Number(await token.totalSupply()))
+    console.log(Number(await sToken.totalSupply()))
   })
 
   it('LD increase after convert', async function() {
