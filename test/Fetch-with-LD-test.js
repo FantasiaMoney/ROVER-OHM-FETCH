@@ -167,6 +167,9 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
       token.address
     )
 
+    await treasury.queue('0', rewardsIncrement.address)
+    await treasury.toggle('0', rewardsIncrement.address, '0x0000000000000000000000000000000000000000')
+
     sale = await Sale.new(
       token.address,
       userOne,
