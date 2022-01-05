@@ -31,8 +31,8 @@ const Stake = artifacts.require('./OlympusStaking')
 
 const MINLDAmountInDAI = toWei("450")
 const MAXLDAmountInDAI = toWei("1000")
-const DAITotal = toWei(String(1000 * 10))
-const DAIRate = toWei(String(1000))
+const DAITotal = toWei(String(10000000000000000000 * 10))
+const DAIRate = toWei(String( 10000000000000000000))
 
 const BlocksNeededForQueue = 0
 const initialIndex = '7675210820'
@@ -101,8 +101,8 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
     await treasury.queue('0', userOne)
     await treasury.toggle('0', userOne, '0x0000000000000000000000000000000000000000')
 
-    await dai.approve(treasury.address, DAITotal)
-    await treasury.deposit(DAIRate, dai.address, DAIRate)
+    await dai.approve(treasury.address, "1000000000000000000")
+    await treasury.deposit("1000000000000000000", dai.address, 0)
 
     // const halfOfTotalSupply = BigNumber(BigNumber(BigNumber(await token.totalSupply()).dividedBy(2)).integerValue()).toString(10)
     // const quarterOfTotalSupply = halfOfTotalSupply / 2

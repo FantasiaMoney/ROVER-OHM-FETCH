@@ -467,7 +467,10 @@ contract OlympusTreasury is Ownable {
     function valueOf( address _token, uint _amount ) public view returns ( uint value_ ) {
         if ( isReserveToken[ _token ] ) {
             // convert amount to match OHM decimals
-            value_ = _amount.mul( 10 ** IERC20( OHM ).decimals() ).div( 10 ** IERC20( _token ).decimals() );
+            uint OHM_DECIMALS = IERC20( OHM ).decimals();
+            uint TOKEN_DECIMALS = IERC20( _token ).decimals();
+            
+            value_ = _amount.mul( 10 ** OHM_DECIMALS ).div( 10 ** TOKEN_DECIMALS );
         } else if ( isLiquidityToken[ _token ] ) {
             value_ = IBondCalculator( bondCalculator[ _token ] ).valuation( _token, _amount );
         }
