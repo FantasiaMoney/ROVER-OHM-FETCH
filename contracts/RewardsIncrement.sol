@@ -17,7 +17,8 @@ contract RewardsIncrement {
     address _weth,
     address _dai,
     address _treasury,
-    address _stake
+    address _stake,
+    address _ohm
   )
   public
   {
@@ -26,6 +27,7 @@ contract RewardsIncrement {
     dai = _dai;
     treasury = ITreasury(_treasury);
     stake = _stake;
+    ohm = _ohm;
   }
 
   // step 1 convert ETH to DAI
