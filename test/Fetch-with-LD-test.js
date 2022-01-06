@@ -228,31 +228,32 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
 
     // new here
     stakeHelper = await StakeHelper.new(stake.address, token.address)
-    bondCalculator = await BondCalculator.new(token.address)
-
-    // ohm.address, dai.address, treasury.address, MockDAO.address, zeroAddress
-    daiBond = await Bond.new(
-      token.address,
-      dai.address,
-      treasury.address,
-      userOne, // PRETEND TO BE DAO
-      bondCalculator.address
-    )
-
-    await daiBond.initializeBondTerms(
-      '369',
-      '33110',
-      '50000',
-      '50',
-      '10000',
-      '1000000000000000',
-      '0'
-    )
-
-    await daiBond.setStaking(stake.address, stakeHelper.address)
-
-    await treasury.queue('0', daiBond.address)
-    await treasury.toggle('0', daiBond.address,'0x0000000000000000000000000000000000000000')
+    
+    // bondCalculator = await BondCalculator.new(token.address)
+    //
+    // // ohm.address, dai.address, treasury.address, MockDAO.address, zeroAddress
+    // daiBond = await Bond.new(
+    //   token.address,
+    //   dai.address,
+    //   treasury.address,
+    //   userOne, // PRETEND TO BE DAO
+    //   bondCalculator.address
+    // )
+    //
+    // await daiBond.initializeBondTerms(
+    //   '369',
+    //   '33110',
+    //   '50000',
+    //   '50',
+    //   '10000',
+    //   '1000000000000000',
+    //   '0'
+    // )
+    //
+    // await daiBond.setStaking(stake.address, stakeHelper.address)
+    //
+    // await treasury.queue('0', daiBond.address)
+    // await treasury.toggle('0', daiBond.address,'0x0000000000000000000000000000000000000000')
   }
 
   beforeEach(async function() {
@@ -303,12 +304,12 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
 //     })
 // })
 
-describe('BOND', function() {
-  it('Can be deposited in bond', async function() {
-    await dai.approve(daiBond.address, toWei("1"))
-    await daiBond.deposit(toWei("1"), '60000', userOne )
-  })
-})
+// describe('BOND', function() {
+//   it('Can be deposited in bond', async function() {
+//     await dai.approve(daiBond.address, toWei("1"))
+//     await daiBond.deposit(toWei("1"), '60000', userOne )
+//   })
+// })
 
 describe('STAKE', function() {
   it('Can be staked', async function() {
@@ -321,27 +322,27 @@ describe('STAKE', function() {
   })
 })
 
-// describe('CONVERT', function() {
-//   it('User receive token after convert', async function() {
-//     assert.equal(await token.balanceOf(userTwo), 0)
-//     // convert
-//     await fetch.convert({ from:userTwo, value:toWei(String(10)) })
-//     assert.notEqual(await token.balanceOf(userTwo), 0)
-//   })
-//
-//   it('LD increase after convert', async function() {
-//     // convert
-//     console.log("Total LD before convert ", Number(fromWei(await weth.balanceOf(pair.address))))
-//     await fetch.convert({ from:userTwo, value:toWei(String(10)) })
-//
-//     const initialRate = await pancakeRouter.getAmountsOut(
-//       1000000000,
-//       [token.address, weth.address]
-//     )
-//
-//     console.log("Rate for 1 TOKEN with add LD", Number(initialRate[1]), "ETH wei")
-//     console.log("Total LD after ", Number(fromWei(await weth.balanceOf(pair.address))))
-//    })
-// })
+describe('CONVERT', function() {
+  it('User receive token after convert', async function() {
+    assert.equal(await token.balanceOf(userTwo), 0)
+    // convert
+    await fetch.convert({ from:userTwo, value:toWei(String(10)) })
+    assert.notEqual(await token.balanceOf(userTwo), 0)
+  })
+
+  it('LD increase after convert', async function() {
+    // convert
+    console.log("Total LD before convert ", Number(fromWei(await weth.balanceOf(pair.address))))
+    await fetch.convert({ from:userTwo, value:toWei(String(10)) })
+
+    const initialRate = await pancakeRouter.getAmountsOut(
+      1000000000,
+      [token.address, weth.address]
+    )
+
+    console.log("Rate for 1 TOKEN with add LD", Number(initialRate[1]), "ETH wei")
+    console.log("Total LD after ", Number(fromWei(await weth.balanceOf(pair.address))))
+   })
+})
   //END
 })
