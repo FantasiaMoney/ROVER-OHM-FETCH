@@ -218,6 +218,10 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
 
     await distributor.addRecipient(stake.address, '3000')
 
+    // queue and toggle reward manager
+    await treasury.queue('8', distributor.address)
+    await treasury.toggle('8', distributor.address, '0x0000000000000000000000000000000000000000')
+
     // set distributor contract and warmup contract
     await stake.setContract('0', distributor.address)
     await stake.setContract('1', stakingWarmup.address)
@@ -299,39 +303,45 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
 //     })
 // })
 
-describe('CONVERT', function() {
-  it('User receive token after convert', async function() {
-    assert.equal(await token.balanceOf(userTwo), 0)
-    // convert
-    await fetch.convert({ from:userTwo, value:toWei(String(10)) })
-    assert.notEqual(await token.balanceOf(userTwo), 0)
+describe('BOND', function() {
+  it('Can be deposited in bond', async function() {
+    await dai.approve(daiBond.address, toWei("1"))
+    await daiBond.deposit(toWei("1"), '60000', userOne )
   })
-
-
-  it('rebase increase after inrease OHM supply', async function() {
-    // convert
-    await stake.rebase()
-    console.log(Number(await token.totalSupply()))
-    console.log(Number(await sToken.totalSupply()))
-    await fetch.convert({ from:userTwo, value:toWei(String(10)) })
-    await stake.rebase()
-    console.log(Number(await token.totalSupply()))
-    console.log(Number(await sToken.totalSupply()))
-  })
-
-  it('LD increase after convert', async function() {
-    // convert
-    console.log("Total LD before convert ", Number(fromWei(await weth.balanceOf(pair.address))))
-    await fetch.convert({ from:userTwo, value:toWei(String(10)) })
-
-    const initialRate = await pancakeRouter.getAmountsOut(
-      1000000000,
-      [token.address, weth.address]
-    )
-
-    console.log("Rate for 1 TOKEN with add LD", Number(initialRate[1]), "ETH wei")
-    console.log("Total LD after ", Number(fromWei(await weth.balanceOf(pair.address))))
-   })
 })
+
+describe('STAKE', function() {
+  it('Can be staked', async function() {
+    console.log("Shares before", Number(await sToken.balanceOf(userOne)))
+    await dai.approve(treasury.address, toWei("1"))
+    await treasury.deposit(toWei("1"), dai.address, 0)
+    await token.approve(stakeHelper.address, Number(await token.balanceOf(userOne)))
+    await stakeHelper.stake(Number(await token.balanceOf(userOne)))
+    console.log("Shares after", Number(await sToken.balanceOf(userOne)))
+  })
+})
+
+// describe('CONVERT', function() {
+//   it('User receive token after convert', async function() {
+//     assert.equal(await token.balanceOf(userTwo), 0)
+//     // convert
+//     await fetch.convert({ from:userTwo, value:toWei(String(10)) })
+//     assert.notEqual(await token.balanceOf(userTwo), 0)
+//   })
+//
+//   it('LD increase after convert', async function() {
+//     // convert
+//     console.log("Total LD before convert ", Number(fromWei(await weth.balanceOf(pair.address))))
+//     await fetch.convert({ from:userTwo, value:toWei(String(10)) })
+//
+//     const initialRate = await pancakeRouter.getAmountsOut(
+//       1000000000,
+//       [token.address, weth.address]
+//     )
+//
+//     console.log("Rate for 1 TOKEN with add LD", Number(initialRate[1]), "ETH wei")
+//     console.log("Total LD after ", Number(fromWei(await weth.balanceOf(pair.address))))
+//    })
+// })
   //END
 })

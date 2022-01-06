@@ -1011,7 +1011,7 @@ contract OlympusBondDepository is Ownable {
         if( isLiquidityBond ) {
             price_ = bondPrice().mul( IBondCalculator( bondCalculator ).markdown( principle ) ).div( 100 );
         } else {
-            price_ = bondPrice().mul( 10 ** IERC20( principle ).decimals() ).div( 100 );
+            price_ = bondPrice().mul( 10 ** uint(IERC20( principle ).decimals()) ).div( 100 );
         }
     }
 
