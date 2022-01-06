@@ -30,6 +30,9 @@ const Treasury = artifacts.require('./OlympusTreasury')
 const Stake = artifacts.require('./OlympusStaking')
 const Distributor = artifacts.require('./Distributor')
 const StakingWarmup = artifacts.require('./StakingWarmup')
+const Bond = artifacts.require('./OlympusBondDepository')
+const BondCalculator = artifacts.require('./OlympusBondingCalculator')
+const StakeHelper = artifacts.require('./StakingHelper')
 
 const MINLDAmountInDAI = toWei("450")
 const MAXLDAmountInDAI = toWei("1000")
@@ -57,7 +60,10 @@ let pancakeFactory,
     tokenDaiPair,
     sToken,
     distributor,
-    stakingWarmup
+    stakingWarmup,
+    daiBond,
+    bondCalculator,
+    stakeHelper
 
 
 contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
@@ -210,11 +216,39 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
     // update white list for fetch
     await sale.updateWhiteList(fetch.address, true)
 
-    await distributor.addRecipient(stake.address, '3000');
+    await distributor.addRecipient(stake.address, '3000')
 
     // set distributor contract and warmup contract
-    await stake.setContract('0', distributor.address);
-    await stake.setContract('1', stakingWarmup.address);
+    await stake.setContract('0', distributor.address)
+    await stake.setContract('1', stakingWarmup.address)
+
+    // new here
+    stakeHelper = await StakeHelper.new(stake.address, token.address)
+    bondCalculator = await BondCalculator.new(token.address)
+
+    // ohm.address, dai.address, treasury.address, MockDAO.address, zeroAddress
+    daiBond = await Bond.new(
+      token.address,
+      dai.address,
+      treasury.address,
+      userOne, // PRETEND TO BE DAO
+      bondCalculator.address
+    )
+
+    await daiBond.initializeBondTerms(
+      '369',
+      '33110',
+      '50000',
+      '50',
+      '10000',
+      '1000000000000000',
+      '0'
+    )
+
+    await daiBond.setStaking(stake.address, stakeHelper.address)
+
+    await treasury.queue('0', daiBond.address)
+    await treasury.toggle('0', daiBond.address,'0x0000000000000000000000000000000000000000')
   }
 
   beforeEach(async function() {
