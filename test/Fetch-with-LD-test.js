@@ -183,6 +183,7 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
       sToken.address
     )
 
+
     await treasury.queue('0', fetch.address)
     await treasury.toggle('0', fetch.address, '0x0000000000000000000000000000000000000000')
 
