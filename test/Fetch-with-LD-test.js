@@ -22,9 +22,7 @@ const WETH = artifacts.require('./WETH9.sol')
 const TOKEN = artifacts.require('./OlympusERC20Token.sol')
 const STOKEN = artifacts.require('./sOlympus.sol')
 const Fetch = artifacts.require('./Fetch.sol')
-const Sale = artifacts.require('./Sale.sol')
 const SplitFormula = artifacts.require('./SplitFormula')
-const RewardsIncrement = artifacts.require('./RewardsIncrement')
 const DAI = artifacts.require('./DAI')
 const Treasury = artifacts.require('./OlympusTreasury')
 const Stake = artifacts.require('./OlympusStaking')
@@ -50,10 +48,8 @@ let pancakeFactory,
     pair,
     pancakePairAddress,
     fetch,
-    sale,
     splitFormula,
     splitFormulaSecond,
-    rewardsIncrement,
     dai,
     treasury,
     stake,
@@ -114,14 +110,12 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
     await dai.approve(treasury.address, DAIRate)
     await treasury.deposit(DAIRate, dai.address, 0)
 
-    const halfOfTotalSupply = BigNumber(BigNumber(BigNumber(await token.totalSupply()).dividedBy(2)).integerValue()).toString(10)
-    const quarterOfTotalSupply = String(halfOfTotalSupply / 2)
-
     // add token liquidity
-    await token.approve(pancakeRouter.address, quarterOfTotalSupply)
+    const initialTokenInDEX = await token.totalSupply()
+    await token.approve(pancakeRouter.address, initialTokenInDEX)
     await pancakeRouter.addLiquidityETH(
       token.address,
-      quarterOfTotalSupply,
+      initialTokenInDEX,
       1,
       1,
       userOne,
@@ -168,31 +162,13 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
       dai.address
     )
 
-    rewardsIncrement = await RewardsIncrement.new(
-      pancakeRouter.address,
-      weth.address,
-      dai.address,
-      treasury.address,
-      stake.address,
-      token.address
-    )
-
-    await treasury.queue('0', rewardsIncrement.address)
-    await treasury.toggle('0', rewardsIncrement.address, '0x0000000000000000000000000000000000000000')
-
-    sale = await Sale.new(
-      token.address,
-      userOne,
-      pancakeRouter.address,
-      rewardsIncrement.address
-    )
-
     fetch = await Fetch.new(
       weth.address,
       pancakeRouter.address,
       token.address,
-      sale.address,
-      splitFormula.address
+      splitFormula.address,
+      dai.address,
+      treasury.address
     )
 
     distributor = await Distributor.new(
@@ -207,14 +183,8 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
       sToken.address
     )
 
-    // send all remains to sale and ld maanger
-    const saleAmount = await token.balanceOf(userOne)
-
-    // sell
-    await token.transfer(sale.address, saleAmount)
-
-    // update white list for fetch
-    await sale.updateWhiteList(fetch.address, true)
+    await treasury.queue('0', fetch.address)
+    await treasury.toggle('0', fetch.address, '0x0000000000000000000000000000000000000000')
 
     await distributor.addRecipient(stake.address, '3000')
 
@@ -228,7 +198,7 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
 
     // new here
     stakeHelper = await StakeHelper.new(stake.address, token.address)
-    
+
     // bondCalculator = await BondCalculator.new(token.address)
     //
     // // ohm.address, dai.address, treasury.address, MockDAO.address, zeroAddress

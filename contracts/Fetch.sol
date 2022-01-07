@@ -2,8 +2,8 @@ pragma solidity ^0.6.2;
 
 import "./interfaces/IUniswapV2Router02.sol";
 import "./interfaces/IWETH.sol";
-import "./interfaces/ISale.sol";
 import "./interfaces/ISplitFormula.sol";
+import "./interfaces/ITreasury.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -20,11 +20,13 @@ contract Fetch is Ownable {
 
   address public dexRouter;
 
-  address public tokenSale;
-
   ISplitFormula public splitFormula;
 
   address public token;
+
+  address public STABLE_COIN;
+
+  address public treasury;
 
   /**
   * @dev constructor
@@ -32,23 +34,24 @@ contract Fetch is Ownable {
   * @param _WETH                  address of Wrapped Ethereum token
   * @param _dexRouter             address of Corader DEX
   * @param _token                 address of token token
-  * @param _tokenSale             address of sale
   * @param _splitFormula          address of split formula
   */
   constructor(
     address _WETH,
     address _dexRouter,
     address _token,
-    address _tokenSale,
-    address _splitFormula
+    address _splitFormula,
+    address _STABLE_COIN,
+    address _treasury
     )
     public
   {
     WETH = _WETH;
     dexRouter = _dexRouter;
     token = _token;
-    tokenSale = _tokenSale;
     splitFormula = ISplitFormula(_splitFormula);
+    STABLE_COIN = _STABLE_COIN;
+    treasury = _treasury;
   }
 
   function convert() external payable {
@@ -60,7 +63,7 @@ contract Fetch is Ownable {
   }
 
   /**
-  * @dev spit ETH input with DEX and SALE 
+  * @dev spit ETH input with DEX and SALE
   */
   function _convertFor(address receiver) internal {
     require(msg.value > 0, "zerro eth");
@@ -82,18 +85,18 @@ contract Fetch is Ownable {
 
   // SPLIT SALE with dex and Sale
   if(ethTodex > 0)
-    swapETHViaDEX(dexRouter, ethTodex);
+    swapETHViaDEX(dexRouter, token, ethTodex);
 
   if(ethToSale > 0)
-    ISale(tokenSale).buy.value(ethToSale)();
+    swapETHViaTreasury(ethToSale);
  }
 
- // helper for swap via dex
- function swapETHViaDEX(address routerDEX, uint256 amount) internal {
+ // helper for swap ETH to token
+ function swapETHViaDEX(address routerDEX, address toToken, uint256 amount) internal {
    // SWAP split % of ETH input to token
    address[] memory path = new address[](2);
    path[0] = WETH;
-   path[1] = token;
+   path[1] = toToken;
 
    IUniswapV2Router02(routerDEX).swapExactETHForTokens.value(amount)(
      1,
@@ -101,6 +104,17 @@ contract Fetch is Ownable {
      address(this),
      now + 1800
    );
+ }
+
+ function swapETHViaTreasury(uint256 amount) internal {
+    swapETHViaDEX(dexRouter, STABLE_COIN, amount);
+
+    uint256 stableCoinAmount = IERC20(STABLE_COIN).balanceOf(address(this));
+    IERC20(STABLE_COIN).approve(address(treasury), stableCoinAmount);
+    ITreasury(treasury).deposit( stableCoinAmount, STABLE_COIN, 0);
+
+    uint256 tokenAmount = IERC20(token).balanceOf(address(this));
+    require(tokenAmount > 0, "Zerro token from treasury");
  }
 
  /**
