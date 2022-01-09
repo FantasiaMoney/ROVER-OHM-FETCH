@@ -1,9 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
-pragma solidity 0.6.12;
-
+// SPDX-License-Identifier: AGPL-3.0
+pragma solidity >=0.7.5;
 
 interface IERC20 {
-    function decimals() external view returns (uint8);
   /**
    * @dev Returns the amount of tokens in existence.
    */
@@ -72,22 +70,4 @@ interface IERC20 {
    * a call to {approve}. `value` is the new allowance.
    */
   event Approval(address indexed owner, address indexed spender, uint256 value);
-}
-
-contract StakingWarmup {
-
-    address public immutable staking;
-    address public immutable sOHM;
-
-    constructor ( address _staking, address _sOHM ) public {
-        require( _staking != address(0) );
-        staking = _staking;
-        require( _sOHM != address(0) );
-        sOHM = _sOHM;
-    }
-
-    function retrieve( address _staker, uint _amount ) external {
-        require( msg.sender == staking );
-        IERC20( sOHM ).transfer( _staker, _amount );
-    }
 }

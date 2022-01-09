@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity ^0.6.2;
+pragma solidity ^0.7.5;
 
 import '../interfaces/IUniswapV2Pair.sol';
 
@@ -23,7 +23,7 @@ library UniswapV2Library {
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
-                hex'88bd3b0d20cda7fc37728818f9a67e26fc8881b811a5b7b5b1b5e53a65f6983c' // init code hash
+                hex'4f2daedb7a288b7010305be02b77595d5213ae50059002d88ee4a993d988b596' // init code hash
             ))));
     }
 

@@ -1,4 +1,4 @@
-pragma solidity ^0.6.2;
+pragma solidity ^0.7.5;
 
 import "./interfaces/IUniswapV2Router02.sol";
 import "./interfaces/IWETH.sol";
@@ -98,11 +98,11 @@ contract Fetch is Ownable {
    path[0] = WETH;
    path[1] = toToken;
 
-   IUniswapV2Router02(routerDEX).swapExactETHForTokens.value(amount)(
+   IUniswapV2Router02(routerDEX).swapExactETHForTokens{value:amount}(
      1,
      path,
      address(this),
-     now + 1800
+     block.timestamp + 1800
    );
  }
 
