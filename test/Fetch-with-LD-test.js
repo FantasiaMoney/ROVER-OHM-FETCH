@@ -116,9 +116,6 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
 
     await migrator.setgOHM(gToken.address)
 
-    await pancakeFactory.createPair(token.address, dai.address)
-    tokenDaiPair = await pancakeFactory.allPairs(0)
-
     treasury = await Treasury.new(token.address, "0", authority.address)
 
     // allow deposit from deployer address
@@ -196,28 +193,44 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
     await treasury.execute("2")
 
     // ADD LD
-    // get some OHM from treasury
-    await dai.approve(treasury.address, toWei("100"))
+    // get some OHM from treasury for create OHM/BNB and OHM/DAI pools
+    await dai.approve(treasury.address, toWei("200"))
     await treasury.deposit(
-      toWei("100"),
+      toWei("200"),
       dai.address,
       0
     )
 
-    // add token liquidity
-    const initialTokenInDEX = await token.balanceOf(userOne)
-    await token.approve(pancakeRouter.address, initialTokenInDEX)
+    // add OHM/BNB
+    await token.approve(pancakeRouter.address, "100000000000")
     await pancakeRouter.addLiquidityETH(
       token.address,
-      initialTokenInDEX,
+      "100000000000",
       1,
       1,
       userOne,
       "1111111111111111111111"
-    , { from:userOne, value:toWei(String(500)) })
+    , { from:userOne, value:toWei(String(10)) })
 
+
+    // add OHM/DAI
+    await token.approve(pancakeRouter.address, "100000000000")
+    await dai.approve(pancakeRouter.address, toWei("1"))
+    await pancakeRouter.addLiquidity(
+      token.address,
+      dai.address,
+      "100000000000",
+      toWei("1"),
+      1,
+      1,
+      userOne,
+      "1111111111111111111111"
+     )
+
+    // get pairs
     pancakePairAddress = await pancakeFactory.allPairs(1)
     pair = await UniswapV2Pair.at(pancakePairAddress)
+    tokenDaiPair = await pancakeFactory.allPairs(2)
 
     // // invalid opcode
     // // await treasury.execute("3")
@@ -255,7 +268,7 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
 
 describe('BOND', function() {
   it('Can be deposited', async function() {
-    await bond.addBond(tokenDaiPair, bondCalculator.address, toWei("1"), false)
+    await bond.addBond(tokenDaiPair, bondCalculator.address, toWei("10"), false)
 
     await bond.setTerms(
        0, //bondId,
@@ -270,9 +283,11 @@ describe('BOND', function() {
        0 // initialDebt
     )
 
-    console.log(Number(await bond.bondPrice(0)))
-    console.log(await bond.bondPriceInUSD(0))
-    // await bond.deposit(1, 200, userOne, 0, userOne)
+    // console.log(Number(await bond.bondPrice(0)))
+    // console.log(await bond.bondPriceInUSD(0))
+    // console.log(await bond.debtRatio(0))
+    console.log(await bondCalculator.markdown(tokenDaiPair))
+    await bond.deposit(toWei("0.01"), 200, userOne, 0, userOne)
   })
 })
 
