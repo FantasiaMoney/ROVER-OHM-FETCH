@@ -64,8 +64,8 @@ contract OlympusBondDepository is OlympusAccessControlled {
   /* ======== CONSTRUCTOR ======== */
 
   constructor(
-    address _OHM, 
-    address _treasury, 
+    address _OHM,
+    address _treasury,
     address _authority
   ) OlympusAccessControlled(IOlympusAuthority(_authority)) {
     require(_OHM != address(0));
@@ -90,24 +90,24 @@ contract OlympusBondDepository is OlympusAccessControlled {
     bool _capacityIsPayout
   ) external onlyGuardian returns (uint256 id_) {
     Terms memory terms = Terms({
-      controlVariable: 0, 
-      fixedTerm: false, 
-      vestingTerm: 0, 
-      expiration: 0, 
-      conclusion: 0, 
-      minimumPrice: 0, 
-      maxPayout: 0, 
+      controlVariable: 0,
+      fixedTerm: false,
+      vestingTerm: 0,
+      expiration: 0,
+      conclusion: 0,
+      minimumPrice: 0,
+      maxPayout: 0,
       maxDebt: 0
     });
 
     bonds[IDs.length] = Bond({
-      principal: IERC20(_principal), 
-      calculator: IBondingCalculator(_calculator), 
-      terms: terms, 
-      termsSet: false, 
-      totalDebt: 0, 
-      lastDecay: block.number, 
-      capacity: _capacity, 
+      principal: IERC20(_principal),
+      calculator: IBondingCalculator(_calculator),
+      terms: terms,
+      termsSet: false,
+      totalDebt: 0,
+      lastDecay: block.number,
+      capacity: _capacity,
       capacityIsPayout: _capacityIsPayout
     });
 
@@ -143,13 +143,13 @@ contract OlympusBondDepository is OlympusAccessControlled {
     require(!bonds[_id].termsSet, "Already set");
 
     Terms memory terms = Terms({
-      controlVariable: _controlVariable, 
-      fixedTerm: _fixedTerm, 
-      vestingTerm: _vestingTerm, 
-      expiration: _expiration, 
-      conclusion: _conclusion, 
-      minimumPrice: _minimumPrice, 
-      maxPayout: _maxPayout, 
+      controlVariable: _controlVariable,
+      fixedTerm: _fixedTerm,
+      vestingTerm: _vestingTerm,
+      expiration: _expiration,
+      conclusion: _conclusion,
+      minimumPrice: _minimumPrice,
+      maxPayout: _maxPayout,
       maxDebt: _maxDebt
     });
 
@@ -392,7 +392,7 @@ contract OlympusBondDepository is OlympusAccessControlled {
    * @return debtRatio_ uint
    */
   function debtRatio(uint256 _BID) public view returns (uint256 debtRatio_) {
-    debtRatio_ = FixedPoint.fraction(currentDebt(_BID).mul(1e9), treasury.baseSupply()).decode112with18().div(1e18); 
+    debtRatio_ = FixedPoint.fraction(currentDebt(_BID).mul(1e9), treasury.baseSupply()).decode112with18().div(1e18);
   }
 
   /**
