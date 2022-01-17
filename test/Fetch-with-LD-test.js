@@ -170,15 +170,15 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
       treasury.address
     )
 
-    bondCalculator = await BondingCalculator.new(token.address)
+    // bondCalculator = await BondingCalculator.new(token.address)
     bond = await Bond.new(token.address, treasury.address, authority.address)
     teller = new BondTeller(bond.address, stake.address, treasury.address, token.address, sToken.address, authority.address)
     await bond.setTeller(teller.address)
 
     // allow bond deposit
-    await treasury.enable("3", teller.address, bondCalculator.address)
-    await treasury.enable("2", dai.address, bondCalculator.address)
-    await treasury.enable("0", bond.address, bondCalculator.address)
+    await treasury.enable("3", teller.address, "0x0000000000000000000000000000000000000000")
+    await treasury.enable("2", dai.address, "0x0000000000000000000000000000000000000000")
+    await treasury.enable("0", bond.address, "0x0000000000000000000000000000000000000000")
 
     // allow deposit from fetch
     await treasury.enable("0", fetch.address, ZERO_ADDRESS)
@@ -270,7 +270,7 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
 
 describe('BOND', function() {
   it('Can be deposited', async function() {
-    await bond.addBond(tokenDaiPair, bondCalculator.address, toWei("10"), false)
+    await bond.addBond(dai.address, "0x0000000000000000000000000000000000000000", toWei("10"), false)
 
     await bond.setTerms(
        0, //bondId,
@@ -278,59 +278,59 @@ describe('BOND', function() {
        false, // terms.fixedTerm,
        5, // terms.vestingTerm,
        6, // terms.expiration,
-       2222222, // terms.conclusion,
+       "111111111111111111", // terms.conclusion,
        10, // terms.minimumPrice,
-       100000000000, // terms.maxPayout,
+       10000, // terms.maxPayout,
        10, // terms.maxDebt,
        0 // initialDebt
     )
 
-    // console.log(Number(await bond.bondPrice(0)))
-    // console.log(await bond.bondPriceInUSD(0))
-    // console.log(await bond.debtRatio(0))
-    // console.log(await bondCalculator.markdown(tokenDaiPair))
+    console.log(Number(await bond.bondPrice(0)))
+    console.log(await bond.bondPriceInUSD(0))
+    console.log(await bond.debtRatio(0))
+    // console.log(await bondCalculator.markdown(dai.address))
     // console.log(Number(await bond.maxPayout(0)))
     // await bond.deposit(toWei("0.00999"), 200, userOne, 0, userOne) // TOO SMALL
     // console.log(await bond.bondInfo(0))
-    const toDeposit = Number(await DAIOHMPair.balanceOf(userOne))
-    // console.log()
-    await DAIOHMPair.transfer(bond.address, toDeposit)
+
+    const toDeposit = toWei("1")
+    await dai.transfer(bond.address, toDeposit)
     await bond.deposit(toDeposit, 200, userOne, 0, userOne) // TOO BIG
   })
 })
 
-describe('STAKE', function() {
-  it('Can be staked', async function() {
-    console.log("Shares before", Number(await sToken.balanceOf(userOne)))
-    await dai.approve(treasury.address, toWei("1"))
-    await treasury.deposit(toWei("1"), dai.address, 0)
-    await token.approve(stake.address, Number(await token.balanceOf(userOne)))
-    await stake.stake(userOne, Number(await token.balanceOf(userOne)), false, false)
-    console.log("Shares after", Number(await sToken.balanceOf(userOne)))
-  })
-})
+// describe('STAKE', function() {
+//   it('Can be staked', async function() {
+//     console.log("Shares before", Number(await sToken.balanceOf(userOne)))
+//     await dai.approve(treasury.address, toWei("1"))
+//     await treasury.deposit(toWei("1"), dai.address, 0)
+//     await token.approve(stake.address, Number(await token.balanceOf(userOne)))
+//     await stake.stake(userOne, Number(await token.balanceOf(userOne)), false, false)
+//     console.log("Shares after", Number(await sToken.balanceOf(userOne)))
+//   })
+// })
 
-describe('CONVERT', function() {
-  it('User receive token after convert', async function() {
-    assert.equal(await token.balanceOf(userTwo), 0)
-    // convert
-    await fetch.convert({ from:userTwo, value:toWei(String(10)) })
-    assert.notEqual(await token.balanceOf(userTwo), 0)
-  })
-
-  it('LD increase after convert', async function() {
-    // convert
-    console.log("Total LD before convert ", Number(fromWei(await weth.balanceOf(pair.address))))
-    await fetch.convert({ from:userTwo, value:toWei(String(10)) })
-
-    const initialRate = await pancakeRouter.getAmountsOut(
-      1000000000,
-      [token.address, weth.address]
-    )
-
-    console.log("Rate for 1 TOKEN with add LD", Number(initialRate[1]), "ETH wei")
-    console.log("Total LD after ", Number(fromWei(await weth.balanceOf(pair.address))))
-   })
-})
+// describe('CONVERT', function() {
+//   it('User receive token after convert', async function() {
+//     assert.equal(await token.balanceOf(userTwo), 0)
+//     // convert
+//     await fetch.convert({ from:userTwo, value:toWei(String(10)) })
+//     assert.notEqual(await token.balanceOf(userTwo), 0)
+//   })
+//
+//   it('LD increase after convert', async function() {
+//     // convert
+//     console.log("Total LD before convert ", Number(fromWei(await weth.balanceOf(pair.address))))
+//     await fetch.convert({ from:userTwo, value:toWei(String(10)) })
+//
+//     const initialRate = await pancakeRouter.getAmountsOut(
+//       1000000000,
+//       [token.address, weth.address]
+//     )
+//
+//     console.log("Rate for 1 TOKEN with add LD", Number(initialRate[1]), "ETH wei")
+//     console.log("Total LD after ", Number(fromWei(await weth.balanceOf(pair.address))))
+//    })
+// })
   //END
 })
