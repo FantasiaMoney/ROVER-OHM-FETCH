@@ -63,18 +63,18 @@ contract Fetch is Ownable {
     stake = _stake;
   }
 
-  function convert(bool _rebasing, bool _claim) external payable {
-    _convertFor(msg.sender, _rebasing, _claim);
+  function convert() external payable {
+    _convertFor(msg.sender);
   }
 
-  function convertFor(address receiver, bool _rebasing, bool _claim) external payable {
-    _convertFor(receiver, _rebasing, _claim);
+  function convertFor(address receiver) external payable {
+    _convertFor(receiver);
   }
 
   /**
   * @dev spit ETH input with DEX and Treasury
   */
-  function _convertFor(address receiver, bool _rebasing, bool _claim) internal {
+  function _convertFor(address receiver) internal {
     require(msg.value > 0, "zerro eth");
     // swap ETH
     swapETHInput(msg.value);
@@ -82,7 +82,7 @@ contract Fetch is Ownable {
     uint256 tokenReceived = IERC20(token).balanceOf(address(this));
     require(tokenReceived > 0, "not swapped");
     IERC20(token).approve(stake, tokenReceived);
-    IStake(stake).stake(receiver, tokenReceived, _rebasing, _claim);
+    IStake(stake).stake(receiver, tokenReceived, true, true);
   }
 
 

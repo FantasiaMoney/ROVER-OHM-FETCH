@@ -332,21 +332,14 @@ describe('CONVERT', function() {
   it('User receive S token after convert', async function() {
     assert.equal(await sToken.balanceOf(userTwo), 0)
     // convert
-    await fetch.convert(true, true, { from:userTwo, value:toWei(String(10)) })
+    await fetch.convert({ from:userTwo, value:toWei(String(10)) })
     assert.notEqual(await sToken.balanceOf(userTwo), 0)
-  })
-
-  it('User receive G token after convert', async function() {
-    assert.equal(await gToken.balanceOf(userTwo), 0)
-    // convert
-    await fetch.convert(false, true, { from:userTwo, value:toWei(String(10)) })
-    assert.notEqual(await gToken.balanceOf(userTwo), 0)
   })
 
   it('LD increase after convert', async function() {
     // convert
     console.log("Total LD before convert ", Number(fromWei(await weth.balanceOf(pair.address))))
-    await fetch.convert(true, true, { from:userTwo, value:toWei(String(10)) })
+    await fetch.convert({ from:userTwo, value:toWei(String(10)) })
 
     const initialRate = await pancakeRouter.getAmountsOut(
       1000000000,
