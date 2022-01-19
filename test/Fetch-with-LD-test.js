@@ -22,7 +22,7 @@ const UniswapV2Pair = artifacts.require('./UniswapV2Pair.sol')
 const Authority = artifacts.require('./OlympusAuthority')
 const WETH = artifacts.require('./WETH9.sol')
 const DAI = artifacts.require('./DAI')
-const Migrator = artifacts.require('./OlympusTokenMigrator')
+// const Migrator = artifacts.require('./OlympusTokenMigrator')
 const Treasury = artifacts.require('./OlympusTreasury')
 const TOKEN = artifacts.require('./OlympusERC20Token.sol')
 const STOKEN = artifacts.require('./sOlympus.sol')
@@ -96,23 +96,27 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
       userOne
     )
 
-    migrator = await Migrator.new(
-        oldOHM,
-        oldsOHM,
-        oldTreasury,
-        oldStaking,
-        oldwsOHM,
-        sushiRouter,
-        uniRouter,
-        "0",
-        authority.address
-    )
+    // migrator = await Migrator.new(
+    //     oldOHM,
+    //     oldsOHM,
+    //     oldTreasury,
+    //     oldStaking,
+    //     oldwsOHM,
+    //     sushiRouter,
+    //     uniRouter,
+    //     "0",
+    //     authority.address
+    // )
 
     token = await TOKEN.new(authority.address)
     sToken = await STOKEN.new()
-    gToken = await GTOKEN.new(migrator.address, sToken.address)
 
-    await migrator.setgOHM(gToken.address)
+    // NOTE
+    // Owner can transfer migrator perrmitions via call migrate to stake address
+    // this one gToken.migrate()
+    gToken = await GTOKEN.new(userOne, sToken.address)
+
+    // await migrator.setgOHM(gToken.address)
 
     treasury = await Treasury.new(token.address, "0", authority.address)
 
@@ -192,8 +196,8 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
 
     await treasury.initialize()
 
-    await treasury.queueTimelock("0", migrator.address, "0x0000000000000000000000000000000000000000")
-    await treasury.queueTimelock("8", migrator.address, "0x0000000000000000000000000000000000000000")
+    // await treasury.queueTimelock("0", migrator.address, "0x0000000000000000000000000000000000000000")
+    // await treasury.queueTimelock("8", migrator.address, "0x0000000000000000000000000000000000000000")
     await treasury.queueTimelock("2", dai.address, "0x0000000000000000000000000000000000000000")
     await treasury.queueTimelock("0", treasury.address, "0x0000000000000000000000000000000000000000")
     await treasury.queueTimelock("4", treasury.address, "0x0000000000000000000000000000000000000000")
