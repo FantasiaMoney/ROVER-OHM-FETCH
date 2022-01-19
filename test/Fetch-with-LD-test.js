@@ -166,24 +166,28 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
       stake.address
     )
 
-    // bondCalculator = await BondingCalculator.new(token.address)
-    bond = await Bond.new(token.address, treasury.address, authority.address)
-    teller = await BondTeller.new(bond.address, stake.address, treasury.address, token.address, sToken.address, authority.address)
-    await bond.setTeller(teller.address)
-
-    // allow bond deposit
-
-    // await treasury.enable("8", treasury.address, "0x0000000000000000000000000000000000000000")
-    await treasury.enable("8", teller.address, "0x0000000000000000000000000000000000000000")
-    await treasury.enable("4", treasury.address, "0x0000000000000000000000000000000000000000")
-    await treasury.enable("3", bond.address, "0x0000000000000000000000000000000000000000")
-    await treasury.enable("3", teller.address, "0x0000000000000000000000000000000000000000")
-    await treasury.enable("2", dai.address, "0x0000000000000000000000000000000000000000")
-    await treasury.enable("0", bond.address, "0x0000000000000000000000000000000000000000")
-
     // allow deposit from fetch and user one
     await treasury.enable("0", fetch.address, ZERO_ADDRESS)
     await treasury.enable("7", userOne, ZERO_ADDRESS)
+
+    // BONDS NOT WORKED
+
+    // // bondCalculator = await BondingCalculator.new(token.address)
+    // bond = await Bond.new(token.address, treasury.address, authority.address)
+    // teller = await BondTeller.new(bond.address, stake.address, treasury.address, token.address, sToken.address, authority.address)
+    // await bond.setTeller(teller.address)
+    //
+    // // allow bond deposit
+    //
+    // // await treasury.enable("8", treasury.address, "0x0000000000000000000000000000000000000000")
+    // await treasury.enable("8", teller.address, "0x0000000000000000000000000000000000000000")
+    // await treasury.enable("4", treasury.address, "0x0000000000000000000000000000000000000000")
+    // await treasury.enable("3", bond.address, "0x0000000000000000000000000000000000000000")
+    // await treasury.enable("3", teller.address, "0x0000000000000000000000000000000000000000")
+    // await treasury.enable("2", dai.address, "0x0000000000000000000000000000000000000000")
+    // await treasury.enable("0", bond.address, "0x0000000000000000000000000000000000000000")
+
+
     await treasury.enable("9", sToken.address, ZERO_ADDRESS)
 
     await treasury.initialize()
