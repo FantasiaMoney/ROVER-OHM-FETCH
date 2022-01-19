@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 
-contract Fetch is Ownable {
+contract Imagine is Ownable {
 
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
@@ -40,8 +40,12 @@ contract Fetch is Ownable {
   * @dev constructor
   *
   * @param _WETH                  address of Wrapped Ethereum token
-  * @param _dexRouter             address of Corader DEX
-  * @param _token                 address of token token
+  * @param _dexRouter             address of UNI v2 DEX
+  * @param _token                 address of OHM token
+  * @param _STABLE_COIN           DAI
+  * @param _treasury              OHM treasury
+  * @param _platformAddress       address for fee
+  * @param _stake                 OHM stake
   */
   constructor(
     address _WETH,
