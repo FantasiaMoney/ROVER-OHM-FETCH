@@ -2,7 +2,6 @@ pragma solidity ^0.7.5;
 
 import "./interfaces/IUniswapV2Router02.sol";
 import "./interfaces/IWETH.sol";
-import "./interfaces/ISplitFormula.sol";
 import "./interfaces/ITreasury.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -20,13 +19,19 @@ contract Fetch is Ownable {
 
   address public dexRouter;
 
-  ISplitFormula public splitFormula;
-
   address public token;
 
   address public STABLE_COIN;
 
   address public treasury;
+
+  uint256 public percentToDex = 40;
+
+  uint256 public percentToTreasury = 40;
+
+  uint256 public percentToPlatform = 20;
+
+  address public platformAddress;
 
   /**
   * @dev constructor
@@ -34,24 +39,23 @@ contract Fetch is Ownable {
   * @param _WETH                  address of Wrapped Ethereum token
   * @param _dexRouter             address of Corader DEX
   * @param _token                 address of token token
-  * @param _splitFormula          address of split formula
   */
   constructor(
     address _WETH,
     address _dexRouter,
     address _token,
-    address _splitFormula,
     address _STABLE_COIN,
-    address _treasury
+    address _treasury,
+    address _platformAddress
     )
     public
   {
     WETH = _WETH;
     dexRouter = _dexRouter;
     token = _token;
-    splitFormula = ISplitFormula(_splitFormula);
     STABLE_COIN = _STABLE_COIN;
     treasury = _treasury;
+    platformAddress = _platformAddress;
   }
 
   function convert() external payable {
@@ -63,7 +67,7 @@ contract Fetch is Ownable {
   }
 
   /**
-  * @dev spit ETH input with DEX and SALE
+  * @dev spit ETH input with DEX and Treasury
   */
   function _convertFor(address receiver) internal {
     require(msg.value > 0, "zerro eth");
@@ -77,18 +81,21 @@ contract Fetch is Ownable {
 
 
  /**
- * @dev swap ETH to token via DEX and Sale
+ * @dev swap ETH to token via DEX and Treasury
  */
  function swapETHInput(uint256 input) internal {
-  (uint256 ethTodex,
-   uint256 ethToSale) = calculateToSplit(input);
+  (uint256 ethToDex,
+   uint256 ethToTreasury,
+   uint256 ethToPlatform) = calculateToSplit(input);
 
-  // SPLIT SALE with dex and Sale
-  if(ethTodex > 0)
-    swapETHViaDEX(dexRouter, token, ethTodex);
+  if(ethToDex > 0)
+    swapETHViaDEX(dexRouter, token, ethToDex);
 
-  if(ethToSale > 0)
-    swapETHViaTreasury(ethToSale);
+  if(ethToTreasury > 0)
+    swapETHViaTreasury(ethToTreasury);
+
+  if(ethToPlatform > 0)
+    payable(platformAddress).transfer(ethToPlatform);
  }
 
  // helper for swap ETH to token
@@ -106,6 +113,7 @@ contract Fetch is Ownable {
    );
  }
 
+ // helper for get OHM from treasury via deposit
  function swapETHViaTreasury(uint256 amount) internal {
     swapETHViaDEX(dexRouter, STABLE_COIN, amount);
 
@@ -118,24 +126,61 @@ contract Fetch is Ownable {
  }
 
  /**
+ * @dev return eth amount for dex, treasury and platform
+ */
+ function calculateToSplitETH(uint256 ethInput)
+   private
+   view
+   returns (
+     uint256 ethToDex,
+     uint256 ethToTreasury,
+     uint256 ethToPlatform
+   )
+ {
+   ethToDex = ethInput.div(100).mul(percentToDex);
+   ethToTreasury = ethInput.div(100).mul(percentToTreasury);
+   ethToPlatform = ethInput.div(100).mul(percentToPlatform);
+ }
+
+ /**
  * @dev return split % amount of input
  */
  function calculateToSplit(uint256 ethInput)
    public
    view
-   returns(uint256 ethTodex, uint256 ethToSale)
+   returns(uint256 ethToDex, uint256 ethToTreasury, uint256 ethToPlatform)
  {
-   (uint256 ethPercentTodex,
-    uint256 ethPercentToSale) = splitFormula.calculateToSplit(ethInput);
-
-   ethTodex = ethInput.div(100).mul(ethPercentTodex);
-   ethToSale = ethInput.div(100).mul(ethPercentToSale);
+   (ethToDex,
+    ethToTreasury,
+    ethToPlatform) = calculateToSplitETH(ethInput);
  }
 
  /**
- * @dev allow owner update splitFormula
+ * @dev allow owner update split %
  */
- function updateSplitFormula(address _splitFormula) external onlyOwner {
-   splitFormula = ISplitFormula(_splitFormula);
+ function updateSplitPercent(
+   uint256 _percentToDex,
+   uint256 _percentToTreasury,
+   uint256 _percentToPlatform
+ )
+   external
+   onlyOwner
+ {
+   uint256 total = _percentToDex + _percentToTreasury + _percentToPlatform;
+   require(total == 100, "Wrong total");
+
+   percentToDex = _percentToDex;
+   percentToTreasury = _percentToTreasury;
+   percentToPlatform = _percentToPlatform;
+ }
+
+ /**
+ * @dev allow owner update platform address
+ */
+ function updatePlatformAddress(address _platformAddress)
+   external
+   onlyOwner
+ {
+   platformAddress = _platformAddress;
  }
 }

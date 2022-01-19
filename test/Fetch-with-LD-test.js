@@ -30,8 +30,6 @@ const GTOKEN = artifacts.require('./gOHM.sol')
 const Stake = artifacts.require('./OlympusStaking')
 const Distributor = artifacts.require('./Distributor')
 const Fetch = artifacts.require('./Fetch.sol')
-const SplitFormula = artifacts.require('./SplitFormula')
-const SplitFormulaMock = artifacts.require('./CustomSplitFormula')
 const Bond = artifacts.require('./OlympusBondDepository')
 const BondTeller = artifacts.require('./BondTeller')
 const BondingCalculator = artifacts.require('./OlympusBondingCalculator')
@@ -63,7 +61,6 @@ let pancakeFactory,
     pair,
     pancakePairAddress,
     fetch,
-    splitFormula,
     dai,
     treasury,
     stake,
@@ -159,39 +156,49 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
     , { from:userOne, value:toWei(String(1)) })
 
 
-    splitFormula = await SplitFormulaMock.new()
-
     fetch = await Fetch.new(
       weth.address,
       pancakeRouter.address,
       token.address,
-      splitFormula.address,
       dai.address,
-      treasury.address
+      treasury.address,
+      userOne // platform address 
     )
 
     // bondCalculator = await BondingCalculator.new(token.address)
     bond = await Bond.new(token.address, treasury.address, authority.address)
-    teller = new BondTeller(bond.address, stake.address, treasury.address, token.address, sToken.address, authority.address)
+    teller = await BondTeller.new(bond.address, stake.address, treasury.address, token.address, sToken.address, authority.address)
     await bond.setTeller(teller.address)
 
     // allow bond deposit
+
+    // await treasury.enable("8", treasury.address, "0x0000000000000000000000000000000000000000")
+    await treasury.enable("8", teller.address, "0x0000000000000000000000000000000000000000")
+    await treasury.enable("4", treasury.address, "0x0000000000000000000000000000000000000000")
+    await treasury.enable("3", bond.address, "0x0000000000000000000000000000000000000000")
     await treasury.enable("3", teller.address, "0x0000000000000000000000000000000000000000")
     await treasury.enable("2", dai.address, "0x0000000000000000000000000000000000000000")
     await treasury.enable("0", bond.address, "0x0000000000000000000000000000000000000000")
 
-    // allow deposit from fetch
+    // allow deposit from fetch and user one
     await treasury.enable("0", fetch.address, ZERO_ADDRESS)
+    await treasury.enable("7", userOne, ZERO_ADDRESS)
+    await treasury.enable("9", sToken.address, ZERO_ADDRESS)
 
     await treasury.initialize()
 
-    await treasury.queueTimelock("0", migrator.address, migrator.address)
-    await treasury.queueTimelock("8", migrator.address, migrator.address)
-    await treasury.queueTimelock("2", dai.address, dai.address)
+    await treasury.queueTimelock("0", migrator.address, "0x0000000000000000000000000000000000000000")
+    await treasury.queueTimelock("8", migrator.address, "0x0000000000000000000000000000000000000000")
+    await treasury.queueTimelock("2", dai.address, "0x0000000000000000000000000000000000000000")
+    await treasury.queueTimelock("0", treasury.address, "0x0000000000000000000000000000000000000000")
+    await treasury.queueTimelock("4", treasury.address, "0x0000000000000000000000000000000000000000")
+    // await treasury.queueTimelock("8", treasury.address, "0x0000000000000000000000000000000000000000")
 
     await treasury.execute("0")
     await treasury.execute("1")
     await treasury.execute("2")
+    // await treasury.execute("3")
+    // await treasury.execute("4")
 
     // ADD LD
     // get some OHM from treasury for create OHM/BNB and OHM/DAI pools
@@ -211,7 +218,7 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
       1,
       userOne,
       "1111111111111111111111"
-    , { from:userOne, value:toWei(String(10)) })
+    , { from:userOne, value:toWei(String(0.0001)) })
 
 
     // add OHM/DAI
@@ -234,9 +241,6 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
     tokenDaiPair = await pancakeFactory.allPairs(2)
     DAIOHMPair = await UniswapV2Pair.at(pancakePairAddress)
 
-    // // invalid opcode
-    // // await treasury.execute("3")
-    // // await treasury.execute("4")
   }
 
   beforeEach(async function() {
@@ -285,30 +289,43 @@ describe('BOND', function() {
        0 // initialDebt
     )
 
-    console.log(Number(await bond.bondPrice(0)))
-    console.log(await bond.bondPriceInUSD(0))
-    console.log(await bond.debtRatio(0))
+    // console.log(Number(await bond.bondPrice(0)))
+    // console.log(await bond.bondPriceInUSD(0))
+    // console.log(await bond.debtRatio(0))
     // console.log(await bondCalculator.markdown(dai.address))
     // console.log(Number(await bond.maxPayout(0)))
     // await bond.deposit(toWei("0.00999"), 200, userOne, 0, userOne) // TOO SMALL
     // console.log(await bond.bondInfo(0))
 
+    console.log(await sToken.stakingContract())
+    assert.equal(
+      await treasury.sOHM(), sToken.address
+    )
+
+    await dai.approve(treasury.address, toWei("200"))
+    await treasury.repayDebtWithReserve(
+      toWei("200"),
+      dai.address
+    )
+
+    // console.log(Number(await treasury.excessReserves()))
+
     const toDeposit = toWei("1")
-    await dai.transfer(bond.address, toDeposit)
-    await bond.deposit(toDeposit, 200, userOne, 0, userOne) // TOO BIG
+    // await dai.transfer(bond.address, toDeposit)
+    // await bond.deposit(toDeposit, 200, userOne, 0, userOne) // TOO BIG
   })
 })
 
-// describe('STAKE', function() {
-//   it('Can be staked', async function() {
-//     console.log("Shares before", Number(await sToken.balanceOf(userOne)))
-//     await dai.approve(treasury.address, toWei("1"))
-//     await treasury.deposit(toWei("1"), dai.address, 0)
-//     await token.approve(stake.address, Number(await token.balanceOf(userOne)))
-//     await stake.stake(userOne, Number(await token.balanceOf(userOne)), false, false)
-//     console.log("Shares after", Number(await sToken.balanceOf(userOne)))
-//   })
-// })
+describe('STAKE', function() {
+  it('Can be staked', async function() {
+    console.log("Shares before", Number(await sToken.balanceOf(userOne)))
+    await dai.approve(treasury.address, toWei("1"))
+    await treasury.deposit(toWei("1"), dai.address, 0)
+    await token.approve(stake.address, Number(await token.balanceOf(userOne)))
+    await stake.stake(userOne, Number(await token.balanceOf(userOne)), false, false)
+    console.log("Shares after", Number(await sToken.balanceOf(userOne)))
+  })
+})
 
 // describe('CONVERT', function() {
 //   it('User receive token after convert', async function() {
