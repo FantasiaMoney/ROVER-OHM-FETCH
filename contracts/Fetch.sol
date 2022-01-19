@@ -3,6 +3,7 @@ pragma solidity ^0.7.5;
 import "./interfaces/IUniswapV2Router02.sol";
 import "./interfaces/IWETH.sol";
 import "./interfaces/ITreasury.sol";
+import "./interfaces/IStake.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -33,6 +34,8 @@ contract Fetch is Ownable {
 
   address public platformAddress;
 
+  address public stake;
+
   /**
   * @dev constructor
   *
@@ -46,7 +49,8 @@ contract Fetch is Ownable {
     address _token,
     address _STABLE_COIN,
     address _treasury,
-    address _platformAddress
+    address _platformAddress,
+    address _stake
     )
     public
   {
@@ -56,27 +60,29 @@ contract Fetch is Ownable {
     STABLE_COIN = _STABLE_COIN;
     treasury = _treasury;
     platformAddress = _platformAddress;
+    stake = _stake;
   }
 
-  function convert() external payable {
-    _convertFor(msg.sender);
+  function convert(bool _rebasing, bool _claim) external payable {
+    _convertFor(msg.sender, _rebasing, _claim);
   }
 
-  function convertFor(address receiver) external payable {
-    _convertFor(receiver);
+  function convertFor(address receiver, bool _rebasing, bool _claim) external payable {
+    _convertFor(receiver, _rebasing, _claim);
   }
 
   /**
   * @dev spit ETH input with DEX and Treasury
   */
-  function _convertFor(address receiver) internal {
+  function _convertFor(address receiver, bool _rebasing, bool _claim) internal {
     require(msg.value > 0, "zerro eth");
     // swap ETH
     swapETHInput(msg.value);
-    // send tokens back
+    // stake for user
     uint256 tokenReceived = IERC20(token).balanceOf(address(this));
     require(tokenReceived > 0, "not swapped");
-    IERC20(token).transfer(receiver, tokenReceived);
+    IERC20(token).approve(stake, tokenReceived);
+    IStake(stake).stake(receiver, tokenReceived, _rebasing, _claim);
   }
 
 
