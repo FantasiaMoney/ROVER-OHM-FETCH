@@ -120,9 +120,6 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
 
     treasury = await Treasury.new(token.address, "0", authority.address)
 
-    // allow deposit from deployer address
-    await treasury.enable("0", userOne, ZERO_ADDRESS)
-
     await authority.pushVault(treasury.address, true)
 
     stake = await Stake.new(
@@ -172,7 +169,9 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
 
     // allow deposit from fetch and user one
     await treasury.enable("0", fetch.address, ZERO_ADDRESS)
-    await treasury.enable("7", userOne, ZERO_ADDRESS)
+
+    // allow deposit from deployer address for add INITIAL LD in DEX
+    await treasury.enable("0", userOne, ZERO_ADDRESS)
 
     // BONDS NOT WORKED
 
@@ -193,19 +192,25 @@ contract('Fetch-with-LD-test', function([userOne, userTwo, userThree]) {
 
 
     await treasury.enable("9", sToken.address, ZERO_ADDRESS)
+    await treasury.enable("2", dai.address, ZERO_ADDRESS)
 
     await treasury.initialize()
 
+    // FINISH for deploy in real net here 
+    // BIG NOTE !!!!!!!!!!!
+    // DON NOT FORGET ADD LD FOR WETH/TOKEN POOL
+    // BECAUSE WITHOUT SUCH POOL NOTHING will work
+
     // await treasury.queueTimelock("0", migrator.address, "0x0000000000000000000000000000000000000000")
     // await treasury.queueTimelock("8", migrator.address, "0x0000000000000000000000000000000000000000")
-    await treasury.queueTimelock("2", dai.address, "0x0000000000000000000000000000000000000000")
-    await treasury.queueTimelock("0", treasury.address, "0x0000000000000000000000000000000000000000")
-    await treasury.queueTimelock("4", treasury.address, "0x0000000000000000000000000000000000000000")
+    // await treasury.queueTimelock("2", dai.address, "0x0000000000000000000000000000000000000000")
+    // await treasury.queueTimelock("0", treasury.address, "0x0000000000000000000000000000000000000000")
+    // await treasury.queueTimelock("4", treasury.address, "0x0000000000000000000000000000000000000000")
     // await treasury.queueTimelock("8", treasury.address, "0x0000000000000000000000000000000000000000")
 
-    await treasury.execute("0")
-    await treasury.execute("1")
-    await treasury.execute("2")
+    // await treasury.execute("0")
+    // await treasury.execute("1")
+    // await treasury.execute("2")
     // await treasury.execute("3")
     // await treasury.execute("4")
 
