@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 
-contract ImagineV2 is Ownable {
+contract ImagineV3 is Ownable {
 
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
@@ -235,6 +235,16 @@ contract ImagineV2 is Ownable {
    onlyOwner
  {
    platformAddress = _platformAddress;
+ }
+
+ /**
+ * @dev allow owner withdraw eth for case if some eth stuck or was sent accidentally
+ */
+ function withdraw()
+   external
+   onlyOwner
+ {
+   payable(owner()).transfer(address(this).balance);
  }
 
  fallback() external payable {}
